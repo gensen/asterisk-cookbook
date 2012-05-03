@@ -69,15 +69,17 @@ devicetype = 7970					; device type (see below)
 <% if user[:phone_mac] %>
 [SEP<%= user[:phone_mac] %>](<%= user[:phone_type] %>)
 description = <%= user[:full_name] %>
+button = line, 100@<%= user[:extension] %>:Skype
 button = line, <%= user[:extension] %>
 <% end %>
+
 <% end %>
 
 ;-----------------------------------------------------------------------------------
 ; New Line Template Method
 [defaultline](!)					; default template for lines
 type = line						; specifies that this template is for lines will be inherited
-context = from-skype_outbound						; default asterisk context
+context = outbound						; default asterisk context
 incominglimit = 2					; more than 1 incoming call = call waiting.
 transfer = on						; per line transfer capability. on, off, 1, 0
 vmnum = *98						; speeddial for voicemail administration, just a number to dial
@@ -98,6 +100,12 @@ video_tos = 0x88					; sets the default video/rtp packets Type of Service (TOS) 
 video_cos = 5						; sets the default video/rtp packets Class of Service (COS)      (defaults to 5)
 echocancel = on						; sets the phone echocancel for this line
 silencesuppression = off				; sets the silence suppression for this line
+
+[100](defaultline)
+id = 100
+pin = 1234
+label = Skype
+description = Incoming from Skype
 
 <% @users.each do |user| %>
 <% if user[:extension] %>

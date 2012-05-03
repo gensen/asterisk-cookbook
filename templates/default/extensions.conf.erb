@@ -4,31 +4,6 @@ static=yes
 writeprotect=no
 clearglobalvars=no
 
-[macro-slaline]
-exten => s,1,SLATrunk(${ARG1})
-exten => s,n,Goto(s-${SLATRUNK_STATUS},1)
-exten => s-FAILURE,1,Voicemail(100,u)
-exten => s-UNANSWERED,1,Voicemail(100,u)
-
-[from-skype]
-exten => s,1,Macro(slaline,from-skype)
-exten => _X.,1,Goto(s,1)
-
-[from-skype_outbound]
-exten => disa,1,Disa(no-password,from-skype_outbound)
-exten => _1NXXNXXXXXX,1,Dial(SIP/${EXTEN}@skype_connect)
-exten => _NXXXXXXX,1,Dial(SIP/+852${EXTEN}@skype_connect)
-exten => _9NXXXXXXXX,1,Dial(SIP/+852${EXTEN}@skype_connect)
-
-; test number 1760 660 4690
-
-[sla_stations]
-<% @users.each do |user| %>
-exten => station<%= user[:extension] %>,1,SLAStation(station<%= user[:extension] %>)
-exten => station<%= user[:extension] %>_from-skype,hint,SLA:station<%= user[:extension] %>_from-skype
-exten => station<%= user[:extension] %>_from-skype,1,SLAStation(station<%= user[:extension] %>_from-skype)
-<% end %>
-
 [globals]
 CONSOLE=Console/dsp				; Console interface for demo
 IAXINFO=guest					; IAXtel username/password
@@ -42,10 +17,66 @@ exten => s,n, Hangup
 exten => <%= @users[0][:username] %>, 1, Dial(SIP/<%= @users[0][:username] %>, 10)
 
 [outbound]
-exten => _+X, 1, Dial(SIP/skype/+${EXTEN},90)
+include => local-devices
+include => eight-digit
+include => seven-digit
+include => tollfree
+include => talk-gmail-outbound
+include => skype-outbound
+include => skype-numeric-outbound
 
 [local-devices]
 <% @users.each do |user| %>
-exten => <%= user[:extension] %>, 1, Dial(SCCP/<%= user[:extension] %>, 10)
+exten => <%= user[:extension] %>, 1, Dial(SCCP/<%= user[:extension] %>/ringer=inside, 10)
 exten => <%= user[:extension] %>, n, VoiceMail(<%= user[:extension] %>@generalsensing.com,u)
+<% end %>
+
+[tollfree]
+exten => _411, 1, Dial(SIP/18004664411@proxy.ideasip.com,60)
+exten => _1800NXXXXXX,1,Dial(SIP/${EXTEN}@proxy.ideasip.com,60)
+exten => _1888NXXXXXX,1,Dial(SIP/${EXTEN}@proxy.ideasip.com,60)
+exten => _1877NXXXXXX,1,Dial(SIP/${EXTEN}@proxy.ideasip.com,60)
+exten => _1866NXXXXXX,1,Dial(SIP/${EXTEN}@proxy.ideasip.com,60)
+
+[eight-digit]
+exten => _NXXXXXXX,1,Set(CALLERID(dnid)=81279238)
+exten => _NXXXXXXX,n,Goto(852${EXTEN},1)
+
+[seven-digit]
+exten => _NXXNXXXXXX,1,Goto(1${EXTEN},1)
+
+[talk-gmail-outbound]
+exten => _[a-z].@gmail.com,1,Dial(gtalk/google/${EXTEN}@gmail.com)
+exten => _[A-Z].@gmail.com,1,Dial(gtalk/google/${EXTEN}@gmail.com)
+
+[skype-outbound]
+exten => _SKYPE/_[A-Z].,1,Dial(SIP/${EXTEN}@skype_connect)
+exten => _SKYPE/_[a-z].,1,Dial(SIP/${EXTEN}@skype_connect)
+
+[skype-numeric-outbound]
+exten => _1NXXNXXXXXX,1,Dial(SIP/${EXTEN}@skype_connect)
+exten => _NX.,1,Dial(SIP/+${EXTEN}@skype_connect)
+
+[macro-slaline]
+exten => s,1,SLATrunk(${ARG1})
+exten => s,n,Goto(s-${SLATRUNK_STATUS},1)
+exten => s-FAILURE,1,Voicemail(100,u)
+exten => s-UNANSWERED,1,Voicemail(100,u)
+
+[from-skype]
+exten => s,1,Dial(SCCP/100,10)
+      same => n,VoiceMail(100@generalsensing.com,u)
+exten => _X.,1,Goto(s,1)
+
+[from-skype_outbound]
+exten => disa,1,Disa(no-password,from-skype_outbound)
+exten => _1NXXNXXXXXX,1,Dial(SIP/${EXTEN}@skype_connect)
+exten => _NXXXXXXX,1,Dial(SIP/+852${EXTEN}@skype_connect)
+exten => _9NXXXXXXXX,1,Dial(SIP/+852${EXTEN}@skype_connect)
+
+[sla_stations]
+<% @users.each do |user| %>
+exten => station<%= user[:extension] %>,1,SLAStation(station<%= user[:extension] %>)
+exten => station<%= user[:extension] %>_from-skype,hint,SLA:station<%= user[:extension] %>_from-skype
+exten => station<%= user[:extension] %>_from-skype,1,SLAStation(station<%= user[:extension] %>_from-skype)
 <% end %>
