@@ -7,6 +7,12 @@ outgoing calls for a single Google Voice number.
 Changes
 =======
 
+## v0.5.0-gs:
+
+* Added SCCP devices, SIP profiles and some additional things.  Not ready for reuse as
+there are still some General Sensing only things that need to be extracted out into
+attributes
+
 ## v0.4.0:
 
 * Add documentation and a check to make sure we're in Ubuntu/Debian
