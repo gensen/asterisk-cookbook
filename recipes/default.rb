@@ -19,16 +19,12 @@
 
 case node['platform']
 when "ubuntu","debian"
-  bash "add apt key" do
-    code "sudo apt-key adv --keyserver subkeys.pgp.net --recv-keys 175E41DF"
-    action :nothing
-    notifies :run, resources(:bash => "apt-get update"), :immediately
-  end
-
-  template "/etc/apt/sources.list.d/asterisk.list" do
-    source "asterisk.list.erb"
-    mode 0644
-    notifies :run, resources(:bash => "add apt key"), :immediately
+  apt_repository "asterisk" do
+    uri "http://packages.asterisk.org/deb"
+    distribution node['lsb']['codename']
+    components ["main"]
+    keyserver "subkeys.pgp.net"
+    key "175E41DF"
   end
 end
 
@@ -62,13 +58,30 @@ external_ip = node[:ec2] ? node[:ec2][:public_ipv4] : node[:ipaddress]
 users = search(:asterisk)
 auth = search(:auth, "id:google")
 
-%w{sip manager modules extensions gtalk jabber}.each do |template_file|
+users.each do |user|
+  if user[:phone_mac]
+    template "#{node[:tftp][:directory]}/SEP#{user[:phone_mac]}.cnf.xml" do
+      source "sep.cnf.xml.erb"
+      owner "asterisk"
+      group "asterisk"
+      mode 0644
+      variables(:user => user, :server_ip_address => node[:asterisk][:internal_ip] )
+    end
+  end
+end
+
+
+%w{sip voicemail sla manager modules extensions gtalk jabber sccp}.each do |template_file|
   template "/etc/asterisk/#{template_file}.conf" do
     source "#{template_file}.conf.erb"
     owner "asterisk"
     group "asterisk"
     mode 0644
-    variables :external_ip => external_ip, :users => users, :auth => auth[0]
+    variables(:external_ip => external_ip,
+              :internal_ip => node[:asterisk][:internal_ip],
+              :users => users,
+              :auth => auth[0],
+              :sip_providers => node[:asterisk][:sip_providers])
     notifies :reload, resources(:service => "asterisk")
   end
 end

@@ -1,0 +1,115 @@
+[general]
+servername = PBX
+keepalive = 60
+debug = core
+context = from-skype
+dateformat = D.M.Y
+bindaddr = <%= @internal_ip %>
+port = 2000
+disallow = all
+allow = alaw
+allow = ulaw
+allow = g729
+
+hotline_enabled = yes
+hotline_context = from-skype_outbound
+hotline_extension = 100
+
+[defaultdevice](!)					; default device template
+type = device						; specifies that this template is for a device, it will be inherited
+keepalive = 60						; set 0 to disable the keepalive check.
+tzoffset = +0
+transfer = on						; enable or disable the transfer capability. It does remove the transfer softkey
+park = off						; take a look to the compile howto. Park stuff is not compiled by default
+cfwdall = off						; activate the callforward stuff and softkeys
+cfwdbusy = off
+cfwdnoanswer = off
+pickupexten = off					; enable Pickup function to direct pickup an extension
+pickupcontext = 				; context where direct pickup search for extensions. if not set it will be ignored.
+pickupmodeanswer = on					; on = asterisk way, the call has been answered when picked up
+							; off = call manager way, the phone who picked up the call rings the call
+dtmfmode = inband					; inband or outofband. outofband is the native cisco dtmf tone play.
+							; Some phone model does not play dtmf tones while connected (bug?), so the default is inband
+imageversion = P00405000700				; useful to upgrade old firmwares (the ones that do not load *.xml from the tftp server)
+deny=0.0.0.0/0.0.0.0					; Same as general
+permit=10.0.1.0/255.255.255.0			; This device can register only using this ip address
+dnd = off						; turn on the dnd softkey for this device. Valid values are "off", "on" (busy signal), "reject" (busy signal), "silent" (ringer = silent) or user to toggle on phone
+trustphoneip = no					; The phone has a ip address. It could be private, so if the phone is behind NAT
+							; we don't have to trust the phone ip address, but the ip address of the connection
+;nat=off							; Device NAT support (default Off)
+;directrtp=off						; This option allow devices to do direct RTP sessions (default Off)
+earlyrtp = progress					; valid options: none, offhook, dial, ringout and progress. default is progress.
+							; The audio stream will be open in the progress and connected state by default.
+private = on						; permit the private function softkey for this device
+mwilamp = on						; Set the MWI lamp style when MWI active to on, off, wink, flash or blink
+mwioncall = off						; Set the MWI on call.
+meetme = on						; enable/disable conferencing via app_meetme (on/off)
+meetmeopts = qxd					; options to send the app_meetme application (default "qd" = quiet,dynamic pin)
+							; Other options (A,a,b,c,C,d,D,E,e,F,i,I,l,L,m,M,o,p,P,q,r,s,S,t,T,w,x,X,1) see app_meetme documentation
+useRedialMenu = off					; show the redial phonebook list instead of dialing the last number (adv_feature)
+setvar=testvar=value
+
+
+[7906](!,defaultdevice)
+devicetype = 7906
+
+[7936](!,defaultdevice)
+devicetype = 7936
+
+[7940](!,defaultdevice)					; add to default device template and create new template named 7940
+devicetype = 7940					; device type (see below)
+
+[7960](!,defaultdevice)					; add to default device template and create new template named 7960
+devicetype = 7960					; device type (see below)
+
+[7970](!,7960)						; add to 7960 device template and create new template named 7970
+devicetype = 7970					; device type (see below)
+
+<% @users.each do |user| %>
+<% if user[:phone_mac] %>
+[SEP<%= user[:phone_mac] %>](<%= user[:phone_type] %>)
+description = <%= user[:full_name] %>
+button = line, <%= user[:extension] %>
+<% end %>
+<% end %>
+
+;-----------------------------------------------------------------------------------
+; New Line Template Method
+[defaultline](!)					; default template for lines
+type = line						; specifies that this template is for lines will be inherited
+context = from-skype_outbound						; default asterisk context
+incominglimit = 2					; more than 1 incoming call = call waiting.
+transfer = on						; per line transfer capability. on, off, 1, 0
+vmnum = *98						; speeddial for voicemail administration, just a number to dial
+meetme = on						; enable/disable conferencing via app_meetme (on/off)
+meetmeopts = qxd					; options to send the app_meetme application (default "qd" = quiet,dynamic pin)
+							; Other options (A,a,b,c,C,d,D,E,e,F,i,I,l,L,m,M,o,p,P,q,r,s,S,t,T,w,x,X,1) see app_meetme documentation
+meetmenum = 700						; this extension will receive meetme requests, SCCP_MEETME_ROOM channel variable will
+							; contain the room number dialed into simpleswitch (this parameter is going to be removed).
+trnsfvm = 1000						; extension to redirect the caller (e.g for voicemail)
+secondary_dialtone_digits = 9				; digits for the secondary dialtone (max 9 digits)
+secondary_dialtone_tone = 0x22				; outside dialtone
+musicclass=default					; Sets the default music on hold class
+language=en						; Default language setting
+audio_tos = 0xB8					; sets the default audio/rtp packets Type of Service (TOS)       (defaults to 0xb8 = 10111000 = 184 = DSCP:101110 = EF)
+							; Others possible values : 0x??, lowdelay, throughput, reliability, mincost(solaris), none
+audio_cos = 6						; sets the default audio/rtp packets Class of Service (COS)      (defaults to 6)
+video_tos = 0x88					; sets the default video/rtp packets Type of Service (TOS)       (defaults to 0x88 = 10001000 = 136 = DSCP:100010 = AF41)
+video_cos = 5						; sets the default video/rtp packets Class of Service (COS)      (defaults to 5)
+echocancel = on						; sets the phone echocancel for this line
+silencesuppression = off				; sets the silence suppression for this line
+
+<% @users.each do |user| %>
+<% if user[:extension] %>
+[<%= user[:extension] %>](defaultline)
+id = <%= user[:extension] %>
+pin = <%= user[:password] %>
+label = <%= user[:extension] %>
+description = <%= user[:full_name] %>
+mailbox = <%= user[:extension] %>
+cid_name = <%= user[:full_name] %>
+cid_num = <%= user[:extension] %>
+regexten = <%= user[:extension] %>
+
+<% end %>
+<% end %>

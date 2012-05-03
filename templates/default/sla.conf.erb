@@ -1,0 +1,13 @@
+[from-skype]
+type=trunk
+device=Local/disa@from-skype_outbound
+
+[station](!)
+type=station
+trunk=from-skype
+
+<% @users.each do |user| %>
+[station<%= user[:extension] %>](station)
+device=SCCP/<%= user[:extension] %>
+
+<% end %>

@@ -65,6 +65,8 @@ noload => app_directory_odbc.so
 ;
 noload => res_config_odbc.so
 noload => res_config_pgsql.so
+; We're using sccp instead
+noload => chan_skinny.so
 ;
 ; Module names listed in "global" section will have symbols globally
 ; exported to modules loaded after them.

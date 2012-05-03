@@ -1,0 +1,87 @@
+<device>
+  <sshUserId>cisco</sshUserId>
+  <sshPassword>cisco</sshPassword>
+  <devicePool>
+    <dateTimeSetting>
+      <name>Hong Kong</name>
+      <dateTemplate>D-M-YA</dateTemplate>
+      <timeZone>China Standard/Daylight Time</timeZone>
+      <ntps>
+       <ntp>
+        <name>hk.pool.ntp.org</name>
+        <ntpMode>Unicast</ntpMode>
+       </ntp>
+      </ntps>
+    </dateTimeSetting>
+    <callManagerGroup>
+     <members>
+      <member  priority="0">
+       <callManager> 		<!-- Primairy Servers -->
+	<name>asterisk1</name>
+	<description>primairy asterisk server</description>
+        <ports>
+         <ethernetPhonePort>2000</ethernetPhonePort>
+        </ports>
+        <processNodeName><%= @server_ip_address %></processNodeName>
+       </callManager>
+      </member>
+     </members>
+    </callManagerGroup>
+    <srstInfo>
+     <name>Enable</name>
+     <srstOption>Enable</srstOption>
+     <userModifiable>true</userModifiable>
+     <ipAddr1><%= @server_ip_address %></ipAddr1>
+     <port1>2000</port1>
+    </srstInfo>
+  </devicePool>
+  <loadInformation>P00308010100</loadInformation>
+  <vendorConfig>
+  <disableSpeaker>false</disableSpeaker>
+  <disableSpeakerAndHeadset>false</disableSpeakerAndHeadset>
+  <forwardingDelay>1</forwardingDelay>
+  <pcPort>0</pcPort>
+  <settingsAccess>1</settingsAccess>
+  <garp>0</garp>
+  <voiceVlanAccess>0</voiceVlanAccess>
+  <videoCapability>0</videoCapability>
+  <autoSelectLineEnable>0</autoSelectLineEnable>
+  <webAccess>0</webAccess>
+  <daysDisplayNotActive>1,7</daysDisplayNotActive>
+  <displayOnTime>08:30</displayOnTime>
+  <displayOnDuration>11:30</displayOnDuration>
+  <displayIdleTimeout>01:00</displayIdleTimeout>
+  </vendorConfig>
+  <userLocale>
+    <name>English_United_States</name>
+    <langCode>en_US</langCode>
+    <winCharSet>iso-8859-1</winCharSet>
+  </userLocale>
+  <networkLocale>United_States</networkLocale>
+  <networkLocaleInfo>
+    <name>United_States</name>
+    <uid>64</uid>
+    <version>1.0.0.0-1</version>
+  </networkLocaleInfo>
+  <deviceSecurityMode>1</deviceSecurityMode>
+  <idleTimeout>3600</idleTimeout>
+  <authenticationURL></authenticationURL>
+  <idleURL></idleURL>
+  <informationURL></informationURL>
+  <messagesURL></messagesURL>
+  <proxyServerURL></proxyServerURL>
+  <servicesURL></servicesURL>
+  <directoryURL>http://pbx.office/directory.php</directoryURL>
+  <dscpForSCCPPhoneConfig>104</dscpForSCCPPhoneConfig>
+  <dscpForSCCPPhoneServices>0</dscpForSCCPPhoneServices>
+  <dscpForCm2Dvce>184</dscpForCm2Dvce>
+  <transportLayerProtocol>4</transportLayerProtocol>
+  <capfAuthMode>0</capfAuthMode>
+  <capfList>
+    <capf>
+      <phonePort>3804</phonePort>
+    </capf>
+  </capfList>
+  <certHash></certHash>
+  <encrConfig>false</encrConfig>
+</device>

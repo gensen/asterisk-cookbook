@@ -5,7 +5,7 @@ allowoverlap = <%= node[:asterisk][:sip_conf_allowoverlap] %>
 allowtransfer = <%= node[:asterisk][:sip_conf_allowtransfer] %>
 bindport = <%= node[:asterisk][:sip_conf_bindport] %>
 bindaddr = <%= node[:asterisk][:sip_conf_bindaddr] %>
-localnet = 192.168.1.0/255.255.255.0 
+localnet = <%= node[:asterisk][:sip_conf_localnet] %>
 tcpenable = <%= node[:asterisk][:sip_conf_tcpenable] %>
 tcpbindaddr = <%= node[:asterisk][:sip_conf_bindaddr] %>
 srvlookup = <%= node[:asterisk][:sip_conf_srvlookup] %>
@@ -59,7 +59,9 @@ limitonpeers = <%= node[:asterisk][:sip_conf_limitonpeers] %>
 t38pt_udptl = <%= node[:asterisk][:sip_conf_t38pt_udptl] %>
 
 externip = <%= @external_ip %>	; Address that we're going to put in outbound SIP
-
+<% @sip_providers.each do |sip_provider| %>
+register => <%= sip_provider[1][:username] %>:<%= sip_provider[1][:password] %>@<%= sip_provider[1][:host] %>
+<% end %>
 
 
 ;----------------------------------------- REALTIME SUPPORT ------------------------
@@ -77,7 +79,7 @@ externip = <%= @external_ip %>	; Address that we're going to put in outbound SIP
 ;rtupdate=yes			; Send registry updates to database using realtime? (yes|no)
 				; If set to yes, when a SIP UA registers successfully, the ip address,
 				; the origination port, the registration period, and the username of
-				; the UA will be set to database via realtime. 
+				; the UA will be set to database via realtime.
 				; If not present, defaults to 'yes'.
 ;rtautoclear=yes		; Auto-Expire friends created on the fly on the same schedule
 				; as if it had just registered? (yes|no|<seconds>)
@@ -95,8 +97,8 @@ externip = <%= @external_ip %>	; Address that we're going to put in outbound SIP
 				;
 				; For realtime peers, when the peer is retrieved from realtime storage,
 				; the registration information will be used regardless of whether
-				; it has expired or not; if it expires while the realtime peer 
-				; is still in memory (due to caching or other reasons), the 
+				; it has expired or not; if it expires while the realtime peer
+				; is still in memory (due to caching or other reasons), the
 				; information will not be removed from realtime storage
 
 
@@ -110,4 +112,24 @@ type=friend
 callerid="<%= user[:full_name] %> <<%= user[:username] %>>"
 host=dynamic
 context=outbound
+<% end %>
+
+<% @sip_providers.each do |sip_provider| %>
+[<%= sip_provider[0] %>]
+type=<%= sip_provider[1][:type] %>
+context=<%= sip_provider[1][:context] %>
+username=<%= sip_provider[1][:username] %>
+secret=<%= sip_provider[1][:password] %>
+canreinvite=<%= sip_provider[1][:canreinvite] %>
+insecure=<%= sip_provider[1][:insecure] %>
+dtmfmode=<%= sip_provider[1][:dtmf_mode] %>
+host=<%= sip_provider[1][:host] %>
+nat=<%= sip_provider[1][:nat] %>
+qualify=<%= sip_provider[1][:qualify] %>
+fromuser=<%= sip_provider[1][:username] %>
+fromdomain=<%= sip_provider[1][:host] %>
+disallow=all
+<% sip_provider[1][:allowed_codecs].each do |codec| %>
+allow=<%= codec %>
+<% end %>
 <% end %>
