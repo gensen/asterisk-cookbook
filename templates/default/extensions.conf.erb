@@ -17,6 +17,10 @@ exten => s,n, Hangup
 exten => <%= @users[0][:username] %>, 1, Dial(SIP/<%= @users[0][:username] %>, 10)
 
 [outbound]
+include => parkedcalls
+include => services
+include => meetme-rooms
+include => recording
 include => local-devices
 include => eight-digit
 include => seven-digit
@@ -24,6 +28,88 @@ include => tollfree
 include => talk-gmail-outbound
 include => skype-outbound
 include => skype-numeric-outbound
+
+[services]
+exten => *724,1,Page(<%= @page_devices.join('&') %>, i, 120)
+exten => *98,1,VoiceMailMain(s${CALLERID(num)}@generalsensing.com)
+
+[recording]
+exten => *101,1,Playback(vm-intro)
+      same => n,Record(recordings/gs-welcome.wav)
+      same => n,Wait(2)
+      same => n,Playback(recordings/gs-welcome)
+      same => n,Hangup
+exten => *102,1,Playback(vm-intro)
+      same => n,Record(recordings/gs-closed.wav)
+      same => n,Wait(2)
+      same => n,Playback(recordings/gs-closed)
+      same => n,Hangup
+exten => *103,1,Playback(vm-intro)
+      same => n,Record(recordings/gs-menu.wav)
+      same => n,Wait(2)
+      same => n,Playback(recordings/gs-menu)
+      same => n,Hangup
+exten => *104,1,Playback(vm-intro)
+      same => n,Record(recordings/gs-connecting.wav)
+      same => n,Wait(2)
+      same => n,Playback(recordings/gs-connecting)
+      same => n,Hangup
+exten => *105,1,Playback(vm-intro)
+      same => n,Record(recordings/gs-address.wav)
+      same => n,Wait(2)
+      same => n,Playback(recordings/gs-address)
+      same => n,Hangup
+exten => *106,1,Playback(vm-intro)
+      same => n,Record(recordings/gs-invalid.wav)
+      same => n,Wait(2)
+      same => n,Playback(recordings/gs-invalid)
+      same => n,Hangup
+
+[main_menu]
+exten => s,1,Verbose(1, Caller ${CALLERID(all)} has entered the auto attendant)
+      same => n,Answer()
+
+; this sets the inter-digit timer
+  same => n,Set(TIMEOUT(digit)=2)
+
+; wait one second to establish audio
+  same => n,Wait(1)
+  same => n,Background(recordings/gs-welcome)
+
+; If Mon-Fri 9:30-5:30 goto label daygreeting
+  same => n,GotoIfTime(9:30-17:30,mon-fri,*,*?menuprompt:afterhoursgreeting)
+
+  same => n(afterhoursgreeting),Background(recordings/gs-closed)
+  same => n,Goto(menuprompt)
+
+  same => n(menuprompt),Background(recordings/gs-menu)
+  same => n,WaitExten(4)
+  same => n,Goto(0,1)
+
+exten => 3,1,Verbose(1, Caller ${CALLERID(all)} has requested address information)
+      same => n,Background(recordings/gs-address)
+      same => n,Goto(s,menuprompt)
+
+exten => 0,1,Verbose(1, Caller ${CALLERID(all)} is calling the operator)
+      same => n,Dial(<%= @operator_extension %>)
+
+exten => i,1,Verbose(1, Caller ${CALLERID(all)} has entered an invalid selection)
+      same => n,Playback(recordings/gs-invalid)
+      same => n,Goto(s,menuprompt)
+
+exten => t,1,Verbose(1, Caller ${CALLERID(all)} has timed out)
+      same => n,Goto(0,1)
+
+exten => _1XXX,1,Verbose(1, Call to an extension starting with '1')
+      same => n,Goto(local-devices,${EXTEN},1)
+
+exten => _6XX,1,Verbose(1, Call to a meeting room starting with '6')
+      same => n,Goto(meetme-rooms,${EXTEN},1)
+
+[meetme-rooms]
+<% @rooms.each do |room| %>
+exten => <%= room %>,1,MeetMe(<%= room %>,cI)
+<% end %>
 
 [local-devices]
 <% @users.each do |user| %>
@@ -64,9 +150,8 @@ exten => s-FAILURE,1,Voicemail(100,u)
 exten => s-UNANSWERED,1,Voicemail(100,u)
 
 [from-skype]
-exten => s,1,Dial(SCCP/100,10)
-      same => n,VoiceMail(100@generalsensing.com,u)
-exten => _X.,1,Goto(s,1)
+exten => s,1,Goto(main_menu,s,1)
+exten => _X.,1,Goto(main_menu,s,1)
 
 [from-skype_outbound]
 exten => disa,1,Disa(no-password,from-skype_outbound)

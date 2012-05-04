@@ -80,3 +80,8 @@ asterisk[:sip_conf_t38pt_udptl]          = 'yes'
 
 # uncomment the following to set an explicit public IP for SIP behind NAT. Default is the current host's ip address (or ec2 public IP if on ec2)
 # asterisk[:public_ip] = '1.2.3.4'
+
+# Detail all of the conference rooms that you want to create
+asterisk[:meetme_rooms] = %w{600}
+
+asterisk[:operator] = "SCCP/1004"

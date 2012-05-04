@@ -58,6 +58,8 @@ external_ip = node[:ec2] ? node[:ec2][:public_ipv4] : node[:ipaddress]
 users = search(:asterisk)
 auth = search(:auth, "id:google")
 
+page_devices = []
+
 users.each do |user|
   if user[:phone_mac]
     template "#{node[:tftp][:directory]}/SEP#{user[:phone_mac]}.cnf.xml" do
@@ -68,10 +70,11 @@ users.each do |user|
       variables(:user => user, :server_ip_address => node[:asterisk][:internal_ip] )
     end
   end
+
+  page_devices << "SCCP/#{user[:extension]}/aa=1w"
 end
 
-
-%w{sip voicemail sla manager modules extensions gtalk jabber sccp}.each do |template_file|
+%w{sip meetme voicemail sla manager modules extensions gtalk jabber sccp}.each do |template_file|
   template "/etc/asterisk/#{template_file}.conf" do
     source "#{template_file}.conf.erb"
     owner "asterisk"
@@ -80,6 +83,9 @@ end
     variables(:external_ip => external_ip,
               :internal_ip => node[:asterisk][:internal_ip],
               :users => users,
+              :operator_extension => node[:asterisk][:operator],
+              :page_devices => page_devices,
+              :rooms => node[:asterisk][:meetme_rooms],
               :auth => auth[0],
               :sip_providers => node[:asterisk][:sip_providers])
     notifies :reload, resources(:service => "asterisk")
