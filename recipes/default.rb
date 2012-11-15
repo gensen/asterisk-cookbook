@@ -19,16 +19,18 @@
 
 case node['platform']
 when "ubuntu","debian"
-  apt_repository "asterisk" do
-    uri "http://packages.asterisk.org/deb"
-    distribution node['lsb']['codename']
-    components ["main"]
-    keyserver "subkeys.pgp.net"
-    key "175E41DF"
+  if node['platform_version'].to_f < 12.04
+    apt_repository "asterisk" do
+      uri "http://packages.asterisk.org/deb"
+      distribution node['lsb']['codename']
+      components ["main"]
+      keyserver "subkeys.pgp.net"
+      key "175E41DF"
+    end
   end
 end
 
-packages = case node[:platform]
+packages = case node["platform"]
 when "ubuntu","debian"
   %w{asterisk-1.8 asterisk-dahdi}
 when "arch"
@@ -40,7 +42,14 @@ packages.each do |pkg|
   package pkg
 end
 
-asterisk_service_name = case node[:platform]
+# Add UFW firewall application, if Ubuntu
+file "/etc/ufw/applications.d/asterisk" do
+  content "[Asterisk]\ntitle=Asterisk\ndescription=An open-source PBX\nports=5060/udp|10000:20000/udp|69/udp|2000/tcp\n"
+  mode "644"
+  owner "root"
+end
+
+asterisk_service_name = case node["platform"]
 when "ubuntu","debian"
   "asterisk-1.8"
 when "arch"
@@ -54,7 +63,7 @@ service "asterisk" do
     "restart-convenient" => true, "force-reload" => true
 end
 
-external_ip = node[:ec2] ? node[:ec2][:public_ipv4] : node[:ipaddress]
+external_ip = node["ec2"] ? node["ec2"]["public_ipv4"] : node["ipaddress"]
 users = search(:asterisk)
 auth = search(:auth, "id:google")
 
@@ -62,12 +71,12 @@ page_devices = []
 
 users.each do |user|
   if user[:phone_mac]
-    template "#{node[:tftp][:directory]}/SEP#{user[:phone_mac]}.cnf.xml" do
+    template "#{node["tftp"]["directory"]}/SEP#{user[:phone_mac]}.cnf.xml" do
       source "sep.cnf.xml.erb"
       owner "asterisk"
       group "asterisk"
       mode 0644
-      variables(:user => user, :server_ip_address => node[:asterisk][:internal_ip] )
+      variables(:user => user, :server_ip_address => node["asterisk"]["internal_ip"] )
     end
   end
 
@@ -81,13 +90,13 @@ end
     group "asterisk"
     mode 0644
     variables(:external_ip => external_ip,
-              :internal_ip => node[:asterisk][:internal_ip],
+              :internal_ip => node["asterisk"]["internal_ip"],
               :users => users,
-              :operator_extension => node[:asterisk][:operator],
+              :operator_extension => node["asterisk"]["operator"],
               :page_devices => page_devices,
-              :rooms => node[:asterisk][:meetme_rooms],
+              :rooms => node["asterisk"]["meetme_rooms"],
               :auth => auth[0],
-              :sip_providers => node[:asterisk][:sip_providers])
+              :sip_providers => node["asterisk"]["sip_providers"])
     notifies :reload, resources(:service => "asterisk")
   end
 end
