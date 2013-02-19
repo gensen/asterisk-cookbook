@@ -16,6 +16,8 @@ default["asterisk"]["manager_permit"]      = '127.0.0.1/255.255.255.0'
 default["asterisk"]["manager_read_perms"]  = %w(system call log verbose command agent user config)
 default["asterisk"]["manager_write_perms"] = %w(system call log verbose command agent user config)
 
+default["asterisk"]["firmware_version"] = "P0030801SR02"
+
 #Setup the SIP.conf file, refer to: http://www.voip-info.org/wiki/view/Asterisk+config+sip.conf
 default["asterisk"]["sip_conf_context"]              = 'default'
 default["asterisk"]["sip_conf_allowguest"]           = 'yes'

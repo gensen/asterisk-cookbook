@@ -76,7 +76,9 @@ users.each do |user|
       owner "asterisk"
       group "asterisk"
       mode 0644
-      variables(:user => user, :server_ip_address => node["asterisk"]["internal_ip"] )
+      variables(:user => user,
+                :server_ip_address => node["asterisk"]["internal_ip"],
+                :firmware_version => node["asterisk"]["firmware_version"])
     end
   end
 
