@@ -63,7 +63,12 @@ service "asterisk" do
     "restart-convenient" => true, "force-reload" => true
 end
 
-external_ip = node["ec2"] ? node["ec2"]["public_ipv4"] : node["ipaddress"]
+external_ip = ""
+if node["asterisk"].has_key?("public_ipv4")
+  external_ip = node["asterisk"]["public_ipv4"]
+else
+  external_ip = node["ec2"] ? node["ec2"]["public_ipv4"] : node["ipaddress"]
+end
 users = search(:asterisk)
 auth = search(:auth, "id:google")
 
